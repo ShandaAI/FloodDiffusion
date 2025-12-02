@@ -29,6 +29,43 @@ export CUDA_HOME=$CONDA_PREFIX
 pip install flash-attn --no-build-isolation
 ```
 
+## Quick Inference (No Data Required)
+
+If you only need to generate motions and don't plan to train or evaluate models, you can use our standalone model on Hugging Face:
+
+🤗 **[ShandaAI/FloodDiffusion](https://huggingface.co/ShandaAI/FloodDiffusion)**
+
+This version requires **no dataset downloads** and works out-of-the-box for inference:
+
+```python
+from transformers import AutoModel
+
+# Load model
+model = AutoModel.from_pretrained(
+    "ShandaAI/FloodDiffusion",
+    trust_remote_code=True
+)
+
+# Generate motion from text
+motion = model("a person walking forward", length=60)
+print(f"Generated motion: {motion.shape}")  # (~240, 263)
+
+# Generate as joint coordinates for visualization
+motion_joints = model("a person walking forward", length=60, output_joints=True)
+print(f"Generated joints: {motion_joints.shape}")  # (~240, 22, 3)
+
+# Multi-text transitions
+motion = model(
+    text=[["walk forward", "turn around", "run back"]],
+    length=[120],
+    text_end=[[40, 80, 120]]
+)
+```
+
+For detailed API documentation, see the [model card](https://huggingface.co/ShandaAI/FloodDiffusion).
+
+> **Note**: For training, evaluation, or using the scripts in this repository, continue with the Data Preparation section below.
+
 ## Data Preparation
 
 ### Prepare Data from Original Sources

@@ -31,9 +31,42 @@ pip install flash-attn --no-build-isolation
 
 ## Data Preparation
 
+### Prepare Data from Original Sources
+
+To reproduce our results from scratch, follow the original data preparation pipelines:
+
+**HumanML3D**:
+- Follow the instructions in the [HumanML3D repository](https://github.com/EricGuo5513/HumanML3D)
+- Extract 263D motion features using their processing pipeline
+- Place the processed data in `raw_data/HumanML3D/`
+
+**BABEL**:
+- Download from the [BABEL website](https://babel.is.tue.mpg.de/)
+- Process the motion sequences to extract 263D features
+- For streaming generation, segment and process according to the frame-level annotations
+- Place the processed data in `raw_data/BABEL_streamed/`
+
+**Dependencies**:
+- Download T5 encoder weights from Hugging Face
+- Download T2M evaluation models from the [text-to-motion repository](https://github.com/EricGuo5513/text-to-motion)
+- Download GloVe embeddings
+
+### Quick Start: Download Preprocessed Data (Recommended)
+
+We provide all necessary data (datasets, dependencies, and pretrained models) on Hugging Face: 🤗 **[ShandaAI/FloodDiffusionDownloads](https://huggingface.co/ShandaAI/FloodDiffusionDownloads)**
+
+Simply run:
+
+```bash
+pip install huggingface_hub
+python download_assets.py
+```
+
+This will automatically download and extract everything into the correct directories (`deps/`, `raw_data/`, `outputs/`).
+
 ### Directory Structure
 
-The project requires three main data directories:
+After downloading or preparing the data, your project should have the following structure:
 
 **Dependencies Directory**:
 
@@ -77,18 +110,18 @@ raw_data/
     └── animations/          # Rendered videos (optional)
 ```
 
-**Pretrained Models Directory** (for inference):
+**Pretrained Models Directory**:
 
 ```
 outputs/                     # Pretrained model checkpoints
 ├── vae_1d_z4_step=300000.ckpt          # VAE model (1D, z_dim=4)
 ├── 20251106_063218_ldf/
-│   └── step_step=50000.ckpt            # LDF model checkpoint
+│   └── step_step=50000.ckpt            # LDF model checkpoint (HumanML3D)
 └── 20251107_021814_ldf_stream/
-    └── step_step=240000.ckpt           # LDF streaming model checkpoint
+    └── step_step=240000.ckpt           # LDF streaming model checkpoint (BABEL)
 ```
 
-> **Note**: Place pretrained model checkpoints in the `outputs/` directory and update paths in your config files (`test_ckpt` and `test_vae_ckpt` in `configs/*.yaml`).
+> **Note**: If you downloaded the models using the script above, the paths are already correctly configured. Otherwise, update `test_ckpt` and `test_vae_ckpt` in your config files to point to your checkpoint locations.
 
 ## Configuration
 
@@ -251,7 +284,12 @@ Copyright (c) 2025 Shanda AI Research Tokyo
 -   [HumanML3D](https://github.com/EricGuo5513/HumanML3D) - Dataset
 -   [text-to-motion](https://github.com/EricGuo5513/text-to-motion) - Evaluation metrics
 -   [BABEL](https://babel.is.tue.mpg.de/) - Dataset for streaming motion generation
+-   [AMASS](https://amass.is.tue.mpg.de/) - Source motion capture data
 -   [PyTorch Lightning](https://lightning.ai/) - Training framework
 -   [VideoPose3D](https://github.com/facebookresearch/VideoPose3D) - Quaternion operations code
 -   [Hugging Face Transformers](https://github.com/huggingface/transformers) - T5 model implementation
 -   [Alibaba Wan Team](https://github.com/Wan-Video/Wan2.2) - WAN model architecture and components
+
+### Data License Notice
+
+The preprocessed datasets we provide contain **extracted motion features (263-dim) and text annotations** derived from HumanML3D and BABEL, which are built upon AMASS and HumanAct12. We **do not distribute raw AMASS data** (SMPL parameters/meshes). This follows standard practice in the motion generation research community. If you require raw motion data or plan to use it for commercial purposes, please register and agree to the licenses on the [AMASS website](https://amass.is.tue.mpg.de/).

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="FloodDiffusion achieves realtime human motion generation for streaming applications.">
+  <meta name="keywords" content="Flow Matching, Diffsuion Forcing, StreamingHuman Motion Generation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!--
+  <script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', '');
+  </script>
+  -->
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation</h1>
+          <h1 class="title is-4 publication-title"></h1>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      
+      <!-- <h2 class="subtitle has-text-centered"> -->
+      <h2 class="subtitle has-text-justified">
+        FloodDiffusion is a framework for streaming human motion generation. Given time-varying text prompts, such as "raise knees" followed by "squats", it generates smooth, continuous human motions aligned with the text, featuring interesting applications in virtual gaming.
+      </h2>
+
+      <div class="columns is-centered">
+        <div class="column is-four-fifths content">
+          <div class="teaser1">
+            <video id="teaser1" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/test_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3"></h2>
+
+      <!-- Motion diversity. -->
+      <h2 class="title is-4">Results with in-the-wild text prompts</h2>
+      <div class="content has-text-justified">
+        <p>
+        FloodDiffusion can generate streaming human motion from time-varying text prompts. (5/6 videos here)
+        </p>
+      </div>
+
+      <div class="container">
+        <div class="columns is-centered is-multiline is-gapless">
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-en" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/crawl_forward_5_stand_up_3_walk_4_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/punch_forward_3_dodge_3_kick_3_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-de" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/breakdance_6_freeze_3_stand_up_4_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-de" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/walk_in_circle_6_sit_down_2_stand_up_4_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-de" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/block_attack_3_counter_punch_3_step_back_3_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-half content has-text-centered">
+            <video id="taylor-de" playsinline autoplay muted loop height="100%">
+              <source src="./static/video_streaming_res/block_attack_3_counter_punch_3_step_back_3_captioned.mp4"
+                      type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4">Same text prompt, different input timesteps</h2>
+    <div class="content has-text-justified">
+      <p>
+      For the same text prompt, FloodDiffusion can generate different time aligned motion results with different input timesteps.
+      </p>
+    </div>
+
+    <div class="content has-text-justified">
+      <p>
+      Group 1: text prompt "walk forward", "sit down", and "stand up".
+      </p>
+    </div>
+
+    <div class="columns is-multiline is-centered">
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_1_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_2_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-de" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-de" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_4_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+    </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4">Stop by neural language command</h2>
+    <div class="content has-text-justified">
+      <p>
+      FloodDiffusion can stop by neural language command, such as "stand", otherwise it will repeat the last command.
+      </p>
+    </div>
+
+    <div class="columns is-multiline is-centered">
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_5_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/video_6_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4">Compare with non-streaming model</h2>
+    <div class="content has-text-justified">
+      <p>
+      For each row, we compare the results of FloodDiffusion (right) with the results of non-streaming model MoMask (left).
+      </p>
+    </div>
+
+    <div class="columns is-multiline is-centered">
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/walk_while_bent_over_4_walk_backwards_5_baseline_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/walk_while_bent_over_4_walk_backwards_5_ours_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/go_upstairs_4_decending_stairs_4_baseline_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-half content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/go_upstairs_4_decending_stairs_4_ours_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4">Compare with other streaming models</h2>
+    <div class="content has-text-justified">
+      <p>
+      For each row, we compare the results of PRIMAL (left) and MotionStreamer (middle) with our FloodDiffusion (right).
+      </p>
+    </div>
+
+    <div class="columns is-multiline is-centered">
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/stumble_3_regain_a_balance_3_walk_on_4_1_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/stumble_3_regain_a_balance_3_walk_on_4_2_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/stumble_3_regain_a_balance_3_walk_on_4_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/jump_for_joy_3_land_3_clap_hands_3_1_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/jump_for_joy_3_land_3_clap_hands_3_2_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/compare/jump_for_joy_3_land_3_clap_hands_3_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4">Ablation study</h2>
+    <div class="content has-text-justified">
+      <p>
+      Comparison between w/o bi-directional attention (w. causal) and w/o the lower triangular scheduler (w. random).
+      </p>
+    </div>
+
+    <div class="columns is-multiline is-centered">
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/random/act_like_sneaking_carefully_through_a_laser_grid_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/causal/act_like_sneaking_carefully_through_a_laser_grid_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/ours/act_like_sneaking_carefully_through_a_laser_grid_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/random/turn_around_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/causal/turn_around_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/ours/turn_around_3_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-en" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/random/move_like_a_zombie_walking_slowly_and_stumbling_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/causal/move_like_a_zombie_walking_slowly_and_stumbling_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+      <div class="column is-one-third content has-text-centered">
+        <video id="taylor-cn" playsinline autoplay muted loop height="100%">
+          <source src="./static/video_streaming_res/ours/move_like_a_zombie_walking_slowly_and_stumbling_10_captioned.mp4"
+                  type="video/mp4">
+        </video>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>
+

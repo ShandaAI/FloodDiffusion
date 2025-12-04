@@ -53,6 +53,50 @@
           <h1 class="title is-2 publication-title">FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation</h1>
           <h1 class="title is-4 publication-title"></h1>
 
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2512.03520"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/ShandaAI/FloodDiffusion"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                </a>
+              </span>
+              <!-- HuggingFace Link. -->
+              <span class="link-block">
+                <a href="https://huggingface.co/ShandaAI/FloodDiffusion"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      🤗
+                  </span>
+                  <span>Model</span>
+                </a>
+              </span>
+              <!-- Real-time Demo Video Link. -->
+              <span class="link-block">
+                <a onclick="openDemoModal()" class="external-link button is-normal is-rounded is-info" style="cursor: pointer;">
+                  <span class="icon">
+                      <i class="fas fa-video"></i>
+                  </span>
+                  <span>Real-time Demo Video</span>
+                </a>
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -373,6 +417,38 @@
 
   </div>
 </section>
+
+<!-- Real-time Demo Modal -->
+<div id="demo-modal" class="modal">
+  <div class="modal-background" onclick="closeDemoModal()"></div>
+  <div class="modal-content" style="width: 80%; max-width: 1200px;">
+    <div class="box" style="padding: 0; overflow: hidden; background: #000;">
+      <video id="demo-video" controls style="width: 100%; display: block;">
+        <source src="./static/video_streaming_res/real-time demo.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close" onclick="closeDemoModal()"></button>
+</div>
+
+<script>
+function openDemoModal() {
+  document.getElementById('demo-modal').classList.add('is-active');
+  document.getElementById('demo-video').play();
+}
+
+function closeDemoModal() {
+  document.getElementById('demo-modal').classList.remove('is-active');
+  document.getElementById('demo-video').pause();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeDemoModal();
+  }
+});
+</script>
 
 </body>
 </html>

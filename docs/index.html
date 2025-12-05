@@ -8,22 +8,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation</title>
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <!--
-  <script async src="https://www.googletagmanager.com/gtag/js?id="></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-
-    gtag('js', new Date());
-
-    gtag('config', '');
-  </script>
-  -->
-
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
         rel="stylesheet">
 
@@ -44,63 +28,61 @@
 </head>
 <body>
 
-
-<section class="hero">
-  <div class="hero-body">
+  <section class="section">
     <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-2 publication-title">FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation</h1>
-          <h1 class="title is-4 publication-title"></h1>
-
-          <div class="column has-text-centered">
-            <div class="publication-links">
-              <!-- PDF Link. -->
-              <span class="link-block">
-                <a href="https://arxiv.org/abs/2512.03520"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="ai ai-arxiv"></i>
-                  </span>
-                  <span>arXiv</span>
-                </a>
-              </span>
-              <!-- Code Link. -->
-              <span class="link-block">
-                <a href="https://github.com/ShandaAI/FloodDiffusion"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
-                </a>
-              </span>
-              <!-- HuggingFace Link. -->
-              <span class="link-block">
-                <a href="https://huggingface.co/ShandaAI/FloodDiffusion"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      🤗
-                  </span>
-                  <span>Model</span>
-                </a>
-              </span>
-              <!-- Real-time Demo Video Link. -->
-              <span class="link-block">
-                <a onclick="openDemoModal()" class="external-link button is-normal is-rounded is-info" style="cursor: pointer;">
-                  <span class="icon">
-                      <i class="fas fa-video"></i>
-                  </span>
-                  <span>Real-time Demo Video</span>
-                </a>
-              </span>
-            </div>
-          </div>
-
-        </div>
-      </div>
+        <br>
+        <h1 class="title is-2 is-size-3-mobile is-spaced has-text-centered">
+            FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation
+        </h1>
+        <p class="subtitle is-6 has-text-centered authors mt-5" style="line-height: 1.5;">
+            <span>
+                <a href="https://openreview.net/profile?id=~YIYI_CAI1" target="_blank" rel="noopener noreferrer">Yiyi&nbsp;Cai<sup>1</sup></a>
+            </span>
+            <span>
+                <a href="https://yoharol.github.io/pages/myself/" target="_blank" rel="noopener noreferrer">Yuhan&nbsp;Wu<sup>2</sup></a>
+            </span>
+            <span>
+                <a href="https://kunhangl.github.io/" target="_blank" rel="noopener noreferrer">Kunhang&nbsp;Li<sup>2</sup></a>
+            </span>
+            <span>
+                <a href="https://shandaai.github.io/FloodDiffusion/" target="_blank" rel="noopener noreferrer">You&nbsp;Zhou<sup>1</sup></a>
+            </span>
+            <span>
+                <a href="http://www.bozheng-lab.com/" target="_blank" rel="noopener noreferrer">Bo&nbsp;Zheng<sup>1</sup></a>
+            </span>
+            <span>
+              <a href="https://h-liu1997.github.io/" target="_blank" rel="noopener noreferrer">Haiyang&nbsp;Liu<sup>2</sup></a>
+            </span>
+        </p>
+        <p class="subtitle is-6 has-text-centered authors mt-5" style="line-height: 1.5;">
+          <sup>1</sup>ShandaAI Research Tokyo, <sup>2</sup>The University of Tokyo
+        </p>
     </div>
-  </div>
+    <div class="container is-max-desktop has-text-centered mt-5">
+        <a href="https://arxiv.org/abs/2512.03520" class="button is-rounded is-link is-light mr-2" target="_blank"
+            rel="noopener noreferrer">
+            <span class="icon"><i class="fas fa-file-pdf"></i></span>
+            <span>arXiv</span>
+        </a>
+        <a href="https://github.com/ShandaAI/FloodDiffusion" class="button is-rounded is-link is-light" target="_blank"
+            rel="noopener noreferrer">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code</span>
+        </a>
+        <a href="https://huggingface.co/ShandaAI/FloodDiffusion" class="button is-rounded is-link is-light" target="_blank"
+        rel="noopener noreferrer">
+        <span class="icon">
+          🤗
+        </span>
+        <span>Model</span>
+        </a>
+        <a onclick="openDemoModal()" class="external-link button is-normal is-rounded is-info" style="cursor: pointer;">
+          <span class="icon">
+              <i class="fas fa-video"></i>
+          </span>
+          <span>Real-time Demo Video</span>
+        </a>
+    </div>
 </section>
 
 <section class="hero teaser">
@@ -134,7 +116,7 @@
       <h2 class="title is-4">Results with in-the-wild text prompts</h2>
       <div class="content has-text-justified">
         <p>
-        FloodDiffusion can generate streaming human motion from time-varying text prompts. (5/6 videos here)
+        FloodDiffusion can generate streaming human motion from time-varying text prompts. 
         </p>
       </div>
 

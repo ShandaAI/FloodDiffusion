@@ -69,10 +69,19 @@ class StreamJointRecovery263:
 
     Key insight: The batch version uses PREVIOUS frame's velocity for the current frame,
     so we need to delay the velocity application by one frame.
+    
+    Args:
+        joints_num: Number of joints in the skeleton
+        smoothing_alpha: EMA smoothing factor (0.0 to 1.0)
+            - 1.0 = no smoothing (default), output follows input exactly
+            - 0.0 = infinite smoothing, output never changes
+            - Recommended values: 0.3-0.7 for visible smoothing
+            - Formula: smoothed = alpha * current + (1 - alpha) * previous
     """
 
-    def __init__(self, joints_num: int):
+    def __init__(self, joints_num: int, smoothing_alpha: float = 1.0):
         self.joints_num = joints_num
+        self.smoothing_alpha = np.clip(smoothing_alpha, 0.0, 1.0)
         self.reset()
 
     def reset(self):
@@ -82,6 +91,8 @@ class StreamJointRecovery263:
         # Store previous frame's velocities for delayed application
         self.prev_rot_vel = 0.0
         self.prev_linear_vel = np.array([0.0, 0.0])
+        # Store previous smoothed joints for EMA
+        self.prev_smoothed_joints = None
 
     def process_frame(self, frame_data: np.ndarray) -> np.ndarray:
         """
@@ -144,6 +155,19 @@ class StreamJointRecovery263:
 
         # Convert to numpy
         joints_np = positions.detach().cpu().numpy()
+
+        # Apply EMA smoothing if enabled
+        if self.smoothing_alpha < 1.0:
+            if self.prev_smoothed_joints is None:
+                # First frame, no smoothing possible
+                self.prev_smoothed_joints = joints_np.copy()
+            else:
+                # EMA: smoothed = alpha * current + (1 - alpha) * previous
+                joints_np = (
+                    self.smoothing_alpha * joints_np
+                    + (1.0 - self.smoothing_alpha) * self.prev_smoothed_joints
+                )
+                self.prev_smoothed_joints = joints_np.copy()
 
         # Store current velocities for next frame
         self.prev_rot_vel = curr_rot_vel

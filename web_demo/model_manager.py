@@ -69,8 +69,9 @@ class ModelManager:
         # Frame buffer
         self.frame_buffer = FrameBuffer(target_buffer_size=4)
         
-        # Stream joint recovery
-        self.stream_recovery = StreamJointRecovery263(joints_num=22)
+        # Stream joint recovery with smoothing
+        self.smoothing_alpha = 1.0  # Default: no smoothing
+        self.stream_recovery = StreamJointRecovery263(joints_num=22, smoothing_alpha=self.smoothing_alpha)
         
         # Generation state
         self.current_text = ""
@@ -81,6 +82,7 @@ class ModelManager:
         # Model generation state
         self.first_chunk = True
         self.history_length = 30  # Default history window length
+        self.denoise_steps = 10  # Default denoising steps
         
         print("ModelManager initialized successfully")
     
@@ -161,8 +163,8 @@ class ModelManager:
             self.stream_recovery.reset()
             self.vae.clear_cache()
             self.first_chunk = True
-            self.model.init_generated(self.history_length, batch_size=1)
-            print(f"Model initialized with history length: {self.history_length}")
+            self.model.init_generated(self.history_length, batch_size=1, num_denoise_steps=self.denoise_steps)
+            print(f"Model initialized with history length: {self.history_length}, denoise steps: {self.denoise_steps}")
             
             # Start generation thread
             self.should_stop = False
@@ -202,23 +204,51 @@ class ModelManager:
         self.is_generating = True
         print("Generation resumed")
     
-    def reset(self, history_length=None):
-        """Reset generation state completely"""
+    def reset(self, history_length=None, smoothing_alpha=None, denoise_steps=None):
+        """Reset generation state completely
+        
+        Args:
+            history_length: History window length for the model
+            smoothing_alpha: EMA smoothing factor (0.0 to 1.0)
+                - 1.0 = no smoothing (default)
+                - 0.0 = infinite smoothing
+                - Recommended: 0.3-0.7 for visible smoothing
+            denoise_steps: Number of denoising steps (1-50, default 10)
+        """
         # Stop if running
         if self.is_generating:
             self.pause_generation()
         
         # Clear everything
         self.frame_buffer.clear()
-        self.stream_recovery.reset()
         self.vae.clear_cache()
         self.first_chunk = True
         
         if history_length is not None:
             self.history_length = history_length
         
-        self.model.init_generated(self.history_length, batch_size=1)
-        print(f"Model reset with history length: {self.history_length}")
+        if denoise_steps is not None:
+            # Ensure denoise_steps is multiple of chunk_size (5)
+            chunk_size = 5
+            denoise_steps = np.clip(denoise_steps, chunk_size, 50)
+            # Round to nearest multiple of chunk_size
+            self.denoise_steps = int(np.round(denoise_steps / chunk_size) * chunk_size)
+            print(f"Denoising steps updated to: {self.denoise_steps} (must be multiple of {chunk_size})")
+        
+        # Update smoothing alpha if provided and recreate stream recovery
+        if smoothing_alpha is not None:
+            self.smoothing_alpha = np.clip(smoothing_alpha, 0.0, 1.0)
+            print(f"Smoothing alpha updated to: {self.smoothing_alpha}")
+        
+        # Recreate stream recovery with new smoothing alpha
+        self.stream_recovery = StreamJointRecovery263(
+            joints_num=22, 
+            smoothing_alpha=self.smoothing_alpha
+        )
+        
+        # Initialize model with denoise steps
+        self.model.init_generated(self.history_length, batch_size=1, num_denoise_steps=self.denoise_steps)
+        print(f"Model reset - history: {self.history_length}, smoothing: {self.smoothing_alpha}, steps: {self.denoise_steps}")
     
     def _generation_loop(self):
         """Main generation loop that runs in background thread"""
@@ -239,6 +269,7 @@ class ModelManager:
                         x = {"text": [self.current_text]}
                         
                         # Generate from model (1 token)
+                        # Note: denoise_steps is set in init_generated, not here
                         output = self.model.stream_generate_step(
                             x, first_chunk=self.first_chunk
                         )
@@ -292,6 +323,8 @@ class ModelManager:
             "target_size": self.frame_buffer.target_size,
             "is_generating": self.is_generating,
             "current_text": self.current_text,
+            "smoothing_alpha": self.smoothing_alpha,
+            "denoise_steps": self.denoise_steps,
         }
 
 

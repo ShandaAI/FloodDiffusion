@@ -105,6 +105,8 @@ def start_generation():
         session_id = data.get('session_id')
         text = data.get('text', 'walk in a circle.')
         history_length = data.get('history_length', 30)
+        smoothing_alpha = data.get('smoothing_alpha', None)  # Optional smoothing parameter
+        denoise_steps = data.get('denoise_steps', None)  # Optional denoising steps
         force = data.get('force', False)  # Allow force takeover
         
         if not session_id:
@@ -152,8 +154,8 @@ def start_generation():
             with consumption_monitor_lock:
                 last_frame_consumed_time = None
         
-        # Reset and start generation with history length
-        mm.reset(history_length=history_length)
+        # Reset and start generation with history length, smoothing, and denoise steps
+        mm.reset(history_length=history_length, smoothing_alpha=smoothing_alpha, denoise_steps=denoise_steps)
         mm.start_generation(text, history_length=history_length)
         
         # Initialize consumption tracking (no nested locks)
@@ -310,6 +312,8 @@ def reset():
         data = request.json if request.json else {}
         session_id = data.get('session_id')
         history_length = data.get('history_length', 30)
+        smoothing_alpha = data.get('smoothing_alpha', None)
+        denoise_steps = data.get('denoise_steps', None)
         
         # If session_id provided, verify it's the active session
         if session_id:
@@ -321,7 +325,7 @@ def reset():
                     }), 403
         
         if model_manager:
-            model_manager.reset(history_length=history_length)
+            model_manager.reset(history_length=history_length, smoothing_alpha=smoothing_alpha, denoise_steps=denoise_steps)
         
         # Clear the active session
         with session_lock:
@@ -332,11 +336,13 @@ def reset():
         with consumption_monitor_lock:
             last_frame_consumed_time = None
         
+        params_msg = f", smoothing: {smoothing_alpha}" if smoothing_alpha is not None else ""
+        params_msg += f", steps: {denoise_steps}" if denoise_steps is not None else ""
         print(f"[Session {session_id}] Reset complete, session cleared")
         
         return jsonify({
             'status': 'success',
-            'message': f'Reset complete with history_length: {history_length}'
+            'message': f'Reset complete with history_length: {history_length}{params_msg}'
         })
     except Exception as e:
         return jsonify({

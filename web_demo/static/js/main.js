@@ -9,10 +9,20 @@ class MotionApp {
         this.targetFps = 20; // Model generates data at 20fps
         this.frameInterval = 1000 / this.targetFps; // 50ms
         this.lastFetchTime = 0;
+        this.nextFetchTime = 0;  // Scheduled time for next fetch
         this.frameCount = 0;
         this.fpsCounter = 0;
         this.fpsUpdateTime = 0;
         this.lastRenderTime = 0;
+        
+        // Motion FPS tracking (frame consumption rate)
+        this.motionFrameCount = 0;
+        this.motionFpsCounter = 0;
+        this.motionFpsUpdateTime = 0;
+        
+        // Request throttling
+        this.isFetchingFrame = false;  // Prevent concurrent requests
+        this.consecutiveWaiting = 0;   // Count consecutive 'waiting' responses
         
         // Session management
         this.sessionId = this.generateSessionId();
@@ -158,6 +168,11 @@ class MotionApp {
         // Get UI elements
         this.motionText = document.getElementById('motionText');
         this.historyLength = document.getElementById('historyLength');
+        this.denoiseSteps = document.getElementById('denoiseSteps');
+        this.smoothingAlpha = document.getElementById('smoothingAlpha');
+        this.smoothingValue = document.getElementById('smoothingValue');
+        this.currentSmoothing = document.getElementById('currentSmoothing');
+        this.currentSteps = document.getElementById('currentSteps');
         this.startResetBtn = document.getElementById('startResetBtn');
         this.updateBtn = document.getElementById('updateBtn');
         this.pauseResumeBtn = document.getElementById('pauseResumeBtn');
@@ -181,6 +196,12 @@ class MotionApp {
         this.pauseResumeBtn.addEventListener('click', () => this.togglePauseResume());
         this.forceTakeoverBtn.addEventListener('click', () => this.handleForceTakeover());
         this.cancelTakeoverBtn.addEventListener('click', () => this.handleCancelTakeover());
+        
+        // Update smoothing value display when slider changes
+        this.smoothingAlpha.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value).toFixed(2);
+            this.smoothingValue.textContent = value;
+        });
     }
     
     async toggleStartReset() {
@@ -210,6 +231,18 @@ class MotionApp {
             return;
         }
         
+        const denoiseSteps = parseInt(this.denoiseSteps.value) || 10;
+        if (denoiseSteps < 5 || denoiseSteps > 50) {
+            alert('Denoising steps must be between 5 and 50');
+            return;
+        }
+        if (denoiseSteps % 5 !== 0) {
+            alert('Denoising steps must be a multiple of 5 (e.g., 5, 10, 15, 20...)');
+            return;
+        }
+        
+        const smoothingAlpha = parseFloat(this.smoothingAlpha.value);
+        
         this.isProcessing = true;
         this.statusEl.textContent = 'Initializing...';
         
@@ -221,6 +254,8 @@ class MotionApp {
                     session_id: this.sessionId,
                     text: text,
                     history_length: historyLength,
+                    smoothing_alpha: smoothingAlpha,
+                    denoise_steps: denoiseSteps,
                     force: force
                 })
             });
@@ -232,6 +267,11 @@ class MotionApp {
                 this.isPaused = false;
                 this.isIdle = false;
                 this.frameCount = 0;
+                this.motionFrameCount = 0;
+                this.motionFpsCounter = 0;
+                this.motionFpsUpdateTime = performance.now();
+                this.isFetchingFrame = false;
+                this.consecutiveWaiting = 0;
                 this.startResetBtn.textContent = 'Reset';
                 this.startResetBtn.classList.remove('btn-primary');
                 this.startResetBtn.classList.add('btn-danger');
@@ -379,6 +419,8 @@ class MotionApp {
         if (this.isProcessing) return;  // Prevent concurrent operations
         
         const historyLength = parseInt(this.historyLength.value) || 30;
+        const smoothingAlpha = parseFloat(this.smoothingAlpha.value);
+        const denoiseSteps = parseInt(this.denoiseSteps.value) || 10;
         
         this.isProcessing = true;
         try {
@@ -387,7 +429,9 @@ class MotionApp {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     session_id: this.sessionId,
-                    history_length: historyLength
+                    history_length: historyLength,
+                    smoothing_alpha: smoothingAlpha,
+                    denoise_steps: denoiseSteps
                 })
             });
             
@@ -398,6 +442,10 @@ class MotionApp {
                 this.isPaused = false;
                 this.isIdle = true;
                 this.frameCount = 0;
+                this.motionFrameCount = 0;
+                this.motionFpsCounter = 0;
+                this.isFetchingFrame = false;
+                this.consecutiveWaiting = 0;
                 this.startResetBtn.textContent = 'Start';
                 this.startResetBtn.classList.remove('btn-danger');
                 this.startResetBtn.classList.add('btn-primary');
@@ -409,6 +457,7 @@ class MotionApp {
                 this.statusEl.textContent = 'Idle';
                 this.bufferSizeEl.textContent = '0 / 4';
                 this.frameCountEl.textContent = '0';
+                this.fpsEl.textContent = '0';
                 
                 // Clear trail
                 if (this.skeleton) {
@@ -446,7 +495,9 @@ class MotionApp {
     }
     
     startFrameLoop() {
-        this.lastFetchTime = performance.now();
+        const now = performance.now();
+        this.lastFetchTime = now;
+        this.nextFetchTime = now + this.frameInterval;
         this.fetchFrame();
     }
     
@@ -454,11 +505,19 @@ class MotionApp {
         if (!this.isRunning) return;
         
         const now = performance.now();
-        const elapsed = now - this.lastFetchTime;
         
-        // Only fetch when frame interval is reached
-        if (elapsed >= this.frameInterval) {
-            this.lastFetchTime = now;
+        // Check if it's time to fetch next frame AND we're not already fetching
+        if (now >= this.nextFetchTime && !this.isFetchingFrame) {
+            // Schedule next fetch (maintain fixed rate regardless of delays)
+            this.nextFetchTime += this.frameInterval;
+            
+            // If we've fallen behind, catch up
+            if (this.nextFetchTime < now) {
+                this.nextFetchTime = now + this.frameInterval;
+            }
+            
+            // Mark as fetching to prevent concurrent requests
+            this.isFetchingFrame = true;
             
             fetch(`/api/get_frame?session_id=${this.sessionId}`)
                 .then(response => response.json())
@@ -467,6 +526,10 @@ class MotionApp {
                         this.skeleton.updatePose(data.joints);
                         this.frameCount++;
                         this.frameCountEl.textContent = this.frameCount;
+                        
+                        // Update motion FPS counter (only when frame consumed)
+                        this.motionFrameCount++;
+                        this.motionFpsCounter++;
                         
                         // Update current root position
                         this.currentRootPos.set(
@@ -477,10 +540,27 @@ class MotionApp {
                         
                         // Auto-follow (if user hasn't interacted for a while)
                         this.updateAutoFollow();
+                        
+                        // Reset waiting counter on success
+                        this.consecutiveWaiting = 0;
+                    } else if (data.status === 'waiting') {
+                        // No frame available, slow down requests if this happens repeatedly
+                        this.consecutiveWaiting++;
+                        
+                        // If buffer is consistently empty, back off a bit
+                        if (this.consecutiveWaiting > 5) {
+                            // Add a small delay to reduce server load
+                            this.nextFetchTime = now + this.frameInterval * 1.5;
+                            this.consecutiveWaiting = 0;
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching frame:', error);
+                })
+                .finally(() => {
+                    // Always mark as done fetching
+                    this.isFetchingFrame = false;
                 });
         }
         
@@ -523,6 +603,24 @@ class MotionApp {
             
             if (data.initialized) {
                 this.bufferSizeEl.textContent = `${data.buffer_size} / ${data.target_size}`;
+                
+                // Update current smoothing display
+                if (data.smoothing_alpha !== undefined) {
+                    this.currentSmoothing.textContent = data.smoothing_alpha.toFixed(2);
+                }
+                
+                // Update current denoising steps display
+                if (data.denoise_steps !== undefined) {
+                    this.currentSteps.textContent = data.denoise_steps;
+                }
+            }
+            
+            // Update motion FPS (frame consumption rate)
+            const now = performance.now();
+            if (now - this.motionFpsUpdateTime > 1000) {
+                this.fpsEl.textContent = this.motionFpsCounter;
+                this.motionFpsCounter = 0;
+                this.motionFpsUpdateTime = now;
             }
         } catch (error) {
             // Silently fail for status updates
@@ -537,15 +635,6 @@ class MotionApp {
         
         // Update controls
         this.controls.update();
-        
-        // Update FPS counter
-        const now = performance.now();
-        this.fpsCounter++;
-        if (now - this.fpsUpdateTime > 1000) {
-            this.fpsEl.textContent = this.fpsCounter;
-            this.fpsCounter = 0;
-            this.fpsUpdateTime = now;
-        }
         
         // Render scene
         this.renderer.render(this.scene, this.camera);

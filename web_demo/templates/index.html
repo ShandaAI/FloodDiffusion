@@ -14,15 +14,31 @@
         </div>
         
         <div class="controls">
-            <div class="input-group">
-                <label for="motionText">Motion Description:</label>
-                <input type="text" id="motionText" placeholder="Enter motion description (e.g., walk forward, jump, dance)" value="walk in a circle.">
+            <div class="params-row">
+                <div class="param-item">
+                    <label for="historyLength">History Length:</label>
+                    <input type="number" id="historyLength" min="10" max="200" value="30">
+                    <span class="param-hint">10-200 tokens</span>
+                </div>
+                
+                <div class="param-item">
+                    <label for="denoiseSteps">Denoise Steps:</label>
+                    <input type="number" id="denoiseSteps" min="5" max="50" step="5" value="10">
+                    <span class="param-hint">5,10,15...50 (multiples of 5)</span>
+                </div>
+                
+                <div class="param-item param-slider">
+                    <label for="smoothingAlpha">Smoothing α:</label>
+                    <div class="slider-container">
+                        <input type="range" id="smoothingAlpha" min="0" max="1" step="0.05" value="1.0">
+                        <span id="smoothingValue" class="slider-value">1.00</span>
+                    </div>
+                    <span class="param-hint">0.0=max, 1.0=none</span>
+                </div>
             </div>
             
-            <div class="input-group">
-                <label for="historyLength">History Length (tokens):</label>
-                <input type="number" id="historyLength" min="10" max="200" value="30" style="width: 100px;">
-                <span class="input-hint">Circular history window length (10-200, default 30)</span>
+            <div class="param-note">
+                ⚠️ Parameter changes take effect on next <strong>Start</strong> or <strong>Reset</strong>
             </div>
             
             <div class="button-group">
@@ -41,13 +57,26 @@
                     <span id="bufferSize" class="status-value">0 / 4</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">FPS:</span>
+                    <span class="status-label">Motion FPS:</span>
                     <span id="fps" class="status-value">0</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">Frames:</span>
                     <span id="frameCount" class="status-value">0</span>
                 </div>
+                <div class="status-item">
+                    <span class="status-label">Smoothing α:</span>
+                    <span id="currentSmoothing" class="status-value">1.00</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Steps:</span>
+                    <span id="currentSteps" class="status-value">10</span>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="motionText">Motion Description:</label>
+                <input type="text" id="motionText" placeholder="Enter motion description (e.g., walk forward, jump, dance)" value="walk in a circle.">
             </div>
             
             <div id="conflictWarning" class="conflict-warning" style="display: none;">
@@ -63,14 +92,12 @@
         </div>
         
         <div class="info">
-            <h3>Instructions:</h3>
-            <ul>
-                <li><strong>Start/Reset:</strong> Start begins generation when idle; Reset clears all state and restarts when running</li>
-                <li><strong>Update Text:</strong> Change motion description while running (no state reset, continuous generation)</li>
-                <li><strong>Pause/Resume:</strong> Pause/resume generation (preserves all state and history)</li>
-                <li><strong>History Length:</strong> Controls model's circular memory window (10-200 tokens, default 30)</li>
-            </ul>
-            <p class="note">Note: First generation requires model loading. Target FPS: 20. Ground trail shows character movement path.</p>
+            <div class="description-box">
+                <strong>Start/Reset:</strong> Start when idle, Reset when running (clears all state and applies new parameters) • 
+                <strong>Update Text:</strong> Change motion description on-the-fly (no reset needed) • 
+                <strong>Pause/Resume:</strong> Pause/resume generation (preserves all state)
+            </div>
+            <p class="note">💡 First generation requires model loading. Target Motion FPS: 20. Ground trail shows movement path. Use mouse to orbit camera.</p>
         </div>
     </div>
     

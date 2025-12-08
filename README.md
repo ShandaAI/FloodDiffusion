@@ -305,6 +305,10 @@ pl_train/
 └── raw_data/                       # Motion datasets
 ```
 
+## Update History
+
+- **2025/12/8**: Added EMA smoothing option for joint positions during rendering
+
 ## Citation
 
 If you use this code in your research, please cite:

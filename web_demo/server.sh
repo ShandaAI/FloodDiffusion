@@ -3,6 +3,7 @@
 
 PID_FILE="server.pid"
 LOG_FILE="app.log"
+GPU_ID="${2:-0}"  # Default GPU ID is 0, can be overridden by second argument
 
 case "$1" in
     start)
@@ -17,10 +18,11 @@ case "$1" in
             fi
         fi
         
+        echo "Using GPU: $GPU_ID"
         echo "Starting server..."
         source $(conda info --base)/etc/profile.d/conda.sh
         conda activate motion_gen
-        nohup python app.py > "$LOG_FILE" 2>&1 &
+        CUDA_VISIBLE_DEVICES=$GPU_ID nohup python app.py > "$LOG_FILE" 2>&1 &
         echo $! > "$PID_FILE"
         sleep 3
         
@@ -56,7 +58,7 @@ case "$1" in
     restart)
         $0 stop
         sleep 2
-        $0 start
+        $0 start $GPU_ID
         ;;
         
     status)
@@ -77,7 +79,9 @@ case "$1" in
         ;;
         
     *)
-        echo "Usage: $0 {start|stop|restart|status}"
+        echo "Usage: $0 {start|stop|restart|status} [GPU_ID]"
+        echo "  GPU_ID: optional, default is 0"
+        echo "  Example: $0 start 3  # Use GPU 3"
         exit 1
         ;;
 esac

@@ -1,0 +1,165 @@
+exp_name: ldf_babel_tiny # Experiment names
+seed: 1234 # Seed value
+debug: false
+train: true
+
+save_dir: ./outputs
+resume_ckpt: null
+test_ckpt: "${dirs.outputs}/20251107_021814_ldf_stream/step_step=240000.ckpt"
+test_vae_ckpt: "${dirs.outputs}/vae_1d_z4_step=300000.ckpt"
+test_vae:
+    target: models.vae_wan_1d.VAEWanModel
+    ema_decay: 0.99
+    params:
+        input_dim: 263
+        z_dim: 4
+test_setting:
+    render: true
+    simple: true
+    recover_dim: 263
+    BABEL_streamed:
+        compare_folders:
+            - "${dirs.raw_data}/BABEL_streamed/animations"
+        compare_names:
+            - "Ground Truth"
+    HumanML3D:
+        compare_folders:
+            - "${dirs.raw_data}/HumanML3D/animations"
+        compare_names:
+            - "Ground Truth"
+val_repeat: 1
+
+logger:
+    wandb:
+        wandb_key: "${wandb_info.key}"
+        project: "${wandb_info.project}"
+        entity: "${wandb_info.entity}"
+
+trainer: # lightning trainer
+    max_steps: 300000
+    accelerator: gpu
+    devices: [0]
+    log_every_n_steps: 100
+    precision: bf16-mixed
+validation:
+    validation_steps: 10000
+    test_steps: 10000
+    save_every_n_steps: 10000
+    save_top_k: 100
+metrics:
+    dim: 263
+    t2m:
+        evaluate_text: true
+        fid_target: "original" # vae or original
+        metric_mean_path: "${dirs.deps}/t2m/meta/mean.npy"
+        metric_std_path: "${dirs.deps}/t2m/meta/std.npy"
+        wordvectorizer:
+            target: metrics.tools.word_vectorizer.WordVectorizer
+            params:
+                meta_root: "${dirs.deps}/glove"
+                prefix: our_vab
+            max_text_len: 20
+        textencoder:
+            target: metrics.tools.t2m_evaluator.TextEncoderBiGRUCo
+            ckpt: "${dirs.deps}/t2m/humanml3d/text_encoder.pt"
+            params:
+                word_size: 300
+                pos_size: 15
+                hidden_size: 512
+                output_size: 512
+        moveencoder:
+            target: metrics.tools.t2m_evaluator.MovementConvEncoder
+            ckpt: "${dirs.deps}/t2m/humanml3d/movement_encoder.pt"
+            params:
+                input_size: 259
+                hidden_size: 512
+                output_size: 512
+        motionencoder:
+            target: metrics.tools.t2m_evaluator.MotionEncoderBiGRUCo
+            ckpt: "${dirs.deps}/t2m/humanml3d/motion_encoder.pt"
+            params:
+                input_size: 512
+                hidden_size: 1024
+                output_size: 512
+
+data:
+    target: datasets.multi.MultiDataset
+    collate_fn: datasets.multi.collate_fn
+    train_bs: 128
+    val_bs: 128
+    test_bs: 16
+    num_workers: 8
+    datasets:
+        - target: datasets.babel.BabelDataset
+          train_meta_paths:
+              - ${dirs.raw_data}/BABEL_streamed/train_processed.txt
+          val_meta_paths:
+              []
+              #   - ${dirs.raw_data}/BABEL_streamed/test_min_processed.txt
+              # - ${dirs.raw_data}/BABEL_streamed/val_processed.txt
+          test_meta_paths:
+              - ${dirs.raw_data}/BABEL_streamed/test_min_processed.txt
+          feature_path: "motions"
+          token_path: "TOKENS_20251030_085836_vae_wan_z4"
+          text_path: "texts"
+          random_length: 0
+          min_length: 5
+          max_length: 200
+          feature_fps: 20
+          token_fps: 5
+        - target: datasets.humanml3d.HumanML3DDataset
+          train_meta_paths:
+              - ${dirs.raw_data}/HumanML3D/train.txt
+          val_meta_paths:
+              #   - ${dirs.raw_data}/HumanML3D/val.txt
+              # - ${dirs.raw_data}/HumanML3D/test_min.txt
+              - ${dirs.raw_data}/HumanML3D/test.txt
+          test_meta_paths:
+              - ${dirs.raw_data}/HumanML3D/test_min.txt
+          feature_path: "new_joint_vecs"
+          token_path: "TOKENS_20251030_085836_vae_wan_z4"
+          text_path: "texts"
+          random_length: 0
+          min_length: 40
+          max_length: 200
+          stream_mode: true
+
+model:
+    target: models.diffusion_forcing_wan_tiny.DiffForcingWanModel
+    ema_decay: 0.99
+    params:
+        model_name: "google/umt5-base"
+        input_dim: 4
+        noise_steps: 10
+        hidden_dim: 256
+        ffn_dim: 1024
+        freq_dim: 64
+        num_heads: 8
+        num_layers: 8
+        time_embedding_scale: 1.0
+        chunk_size: 5
+        use_text_cond: True
+        text_len: 128
+        drop_out: 0.1
+        cfg_scale: 5.0
+        prediction_type: "vel"
+        causal: False
+
+optimizer:
+    target: AdamW
+    params:
+        lr: 2e-4
+        betas: [0.9, 0.99]
+        weight_decay: 0.0
+        eps: 1e-8
+
+# lr_scheduler:
+#     target: diffusers.optimization.get_constant_schedule_with_warmup
+#     params:
+#         num_warmup_steps: 1000
+
+lr_scheduler:
+    target: CosineAnnealingLR
+    params:
+        T_max: 1000
+        eta_min: 1e-6

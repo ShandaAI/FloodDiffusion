@@ -4,16 +4,55 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModel
 
-from .tools.t5 import T5EncoderModel
 from .tools.wan_model import WanModel
+
+
+class HFT5Encoder:
+    """Wrapper for HuggingFace T5 encoder, compatible with original T5EncoderModel interface"""
+    def __init__(self, text_len, dtype=torch.float32, device=torch.device("cpu"), model_name="google/umt5-base"):
+        self.text_len = text_len
+        self.dtype = dtype
+        self.device = device
+        
+        print(f"Loading {model_name} from HuggingFace...")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(
+            model_name, 
+            dtype=dtype
+        ).encoder  # Only use the encoder part
+        self.model.eval()
+        self.model.requires_grad_(False)
+        self.model.to(device)
+    
+    def __call__(self, texts, device):
+        """Encode texts, returns list of tensors (one per text, with padding removed)"""
+        # Tokenize
+        inputs = self.tokenizer(
+            texts,
+            padding=True,
+            truncation=True,
+            max_length=self.text_len,
+            return_tensors="pt"
+        )
+        ids = inputs.input_ids.to(device)
+        mask = inputs.attention_mask.to(device)
+        
+        # Encode (model should already be on device via external .model.to(device) call)
+        context = self.model(input_ids=ids, attention_mask=mask).last_hidden_state
+        
+        # Get sequence lengths (excluding padding)
+        seq_lens = mask.sum(dim=1).long()
+        
+        # Return list of tensors with padding removed (same as original T5EncoderModel)
+        return [u[:v] for u, v in zip(context, seq_lens)]
 
 
 class DiffForcingWanModel(nn.Module):
     def __init__(
         self,
-        checkpoint_path="deps/t5_umt5-xxl-enc-bf16/models_t5_umt5-xxl-enc-bf16.pth",
-        tokenizer_path="deps/t5_umt5-xxl-enc-bf16/google/umt5-xxl",
+        model_name="google/umt5-base",  # HuggingFace model name
         input_dim=256,
         hidden_dim=1024,
         ffn_dim=2048,
@@ -47,15 +86,17 @@ class DiffForcingWanModel(nn.Module):
         self.prediction_type = prediction_type
         self.causal = causal
 
-        self.text_dim = 4096
+        self.text_dim = 768  # umt5-base hidden size
         self.text_len = text_len
-        self.text_encoder = T5EncoderModel(
-            text_len=self.text_len,
-            dtype=torch.bfloat16,
+        self.model_name = model_name
+        
+        # Load model and tokenizer from HuggingFace
+        print(f"Loading {model_name} from HuggingFace...")
+        self.text_encoder = HFT5Encoder(
+            text_len=text_len,
+            dtype=torch.float32,
             device=torch.device("cpu"),
-            checkpoint_path=checkpoint_path,
-            tokenizer_path=tokenizer_path,
-            shard_fn=None,
+            model_name=model_name,
         )
 
         # Text encoding cache

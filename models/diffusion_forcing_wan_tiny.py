@@ -94,7 +94,7 @@ class DiffForcingWanModel(nn.Module):
         print(f"Loading {model_name} from HuggingFace...")
         self.text_encoder = HFT5Encoder(
             text_len=text_len,
-            dtype=torch.float32,
+            dtype=torch.bfloat16,
             device=torch.device("cpu"),
             model_name=model_name,
         )

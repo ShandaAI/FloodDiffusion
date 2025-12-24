@@ -5,7 +5,7 @@ train: true
 
 save_dir: ./outputs
 resume_ckpt: null
-test_ckpt: "${dirs.outputs}/20251107_021814_ldf_stream/step_step=240000.ckpt"
+test_ckpt: "${dirs.outputs}20251219_01492_ldf_tiny_stream/step_step=200000.ckpt"
 test_vae_ckpt: "${dirs.outputs}/vae_1d_z4_step=300000.ckpt"
 test_vae:
     target: models.vae_wan_1d.VAEWanModel

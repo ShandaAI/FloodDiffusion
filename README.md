@@ -66,6 +66,18 @@ motion = model(
 
 For detailed API documentation, see the [model card](https://huggingface.co/ShandaAI/FloodDiffusion).
 
+We also provide a tiny version of it which is smaller and faster 🤗 **[ShandaAI/FloodDiffusionTiny](https://huggingface.co/ShandaAI/FloodDiffusionTiny)**:
+
+```python
+from transformers import AutoModel
+
+# Load model
+model = AutoModel.from_pretrained(
+    "ShandaAI/FloodDiffusionTiny",
+    trust_remote_code=True
+)
+```
+
 > **Note**: For training, evaluation, or using the scripts in this repository, continue with the Data Preparation section below.
 
 ## Data Preparation
@@ -166,8 +178,12 @@ outputs/
 ├── vae_1d_z4_step=300000.ckpt          # VAE model (1D, z_dim=4)
 ├── 20251106_063218_ldf/
 │   └── step_step=50000.ckpt            # LDF model checkpoint (HumanML3D)
-└── 20251107_021814_ldf_stream/
-    └── step_step=240000.ckpt           # LDF streaming model checkpoint (BABEL)
+├── 20251107_021814_ldf_stream/
+│   └── step_step=240000.ckpt           # LDF streaming model checkpoint (BABEL)
+├── 20251217_023720_ldf_tiny/
+│   └── step_step=60000.ckpt            # LDF tiny model checkpoint
+└── 20251219_01492_ldf_tiny_stream/
+    └── step_step=200000.ckpt           # LDF tiny streaming model checkpoint
 ```
 
 > **Note**: If you downloaded the models using the script above, the paths are already correctly configured. Otherwise, update `test_ckpt` and `test_vae_ckpt` in your config files to point to your checkpoint locations.
@@ -312,6 +328,7 @@ For real-time interactive demo with streaming generation, see [`web_demo/README.
 ## Update History
 
 -   **2025/12/8**: Added EMA smoothing option for joint positions during rendering
+-   **2025/12/24**: Added tiny models that can be trained on 5090 GPU
 
 ## Citation
 

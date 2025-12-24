@@ -3,6 +3,7 @@
 
 PID_FILE="server.pid"
 LOG_FILE="app.log"
+CONFIG_FILE="${2:-configs/stream.yaml}"  # Default config file
 
 case "$1" in
     start)
@@ -18,9 +19,10 @@ case "$1" in
         fi
         
         echo "Starting server..."
+        echo "Config file: $CONFIG_FILE"
         source $(conda info --base)/etc/profile.d/conda.sh
         conda activate motion_gen
-        nohup python app.py > "$LOG_FILE" 2>&1 &
+        nohup python app.py --config "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
         echo $! > "$PID_FILE"
         sleep 3
         
@@ -56,7 +58,7 @@ case "$1" in
     restart)
         $0 stop
         sleep 2
-        $0 start
+        $0 start "$CONFIG_FILE"
         ;;
         
     status)
@@ -77,7 +79,18 @@ case "$1" in
         ;;
         
     *)
-        echo "Usage: $0 {start|stop|restart|status}"
+        echo "Usage: $0 {start|stop|restart|status} [config_file]"
+        echo ""
+        echo "Commands:"
+        echo "  start [config_file]  - Start the server with optional config file"
+        echo "  stop                 - Stop the server"
+        echo "  restart [config_file]- Restart the server with optional config file"
+        echo "  status               - Check server status"
+        echo ""
+        echo "Examples:"
+        echo "  $0 start                           # Use default config (configs/stream.yaml)"
+        echo "  $0 start configs/stream_tiny.yaml  # Use custom config"
+        echo "  $0 restart configs/stream_tiny.yaml  # Restart with custom config"
         exit 1
         ;;
 esac

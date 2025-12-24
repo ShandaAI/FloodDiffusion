@@ -85,3 +85,12 @@ Use `server.sh` for reliable process management:
 ./server.sh restart  # Restart server
 ./server.sh status   # Check status
 ```
+
+## Tiny Model
+
+You can use different model configurations by specifying a config file:
+
+```bash
+./server.sh start configs/stream_tiny.yaml
+./server.sh restart configs/stream_tiny.yaml
+```

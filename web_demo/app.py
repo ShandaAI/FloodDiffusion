@@ -6,6 +6,7 @@ from flask_cors import CORS
 import json
 import time
 import threading
+import argparse
 from model_manager import get_model_manager
 
 app = Flask(__name__)
@@ -13,6 +14,7 @@ CORS(app)
 
 # Global model manager (lazy loaded)
 model_manager = None
+model_config_path = None  # Will be set once at startup
 
 # Session tracking - only one active session can generate at a time
 active_session_id = None  # The session ID currently generating
@@ -29,9 +31,10 @@ def init_model():
     """Initialize model manager"""
     global model_manager
     if model_manager is None:
-        print("Initializing model manager...")
-        # Use the same config as generate_ldf.py
-        model_manager = get_model_manager(config_path='configs/stream.yaml')
+        if model_config_path is None:
+            raise RuntimeError("model_config_path not set. Server not properly initialized.")
+        print(f"Initializing model manager with config: {model_config_path}")
+        model_manager = get_model_manager(config_path=model_config_path)
         print("Model manager ready!")
     return model_manager
 
@@ -443,7 +446,19 @@ def get_status():
 
 
 if __name__ == '__main__':
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Flask server for real-time 3D motion generation')
+    parser.add_argument('--config', type=str, default='configs/stream.yaml',
+                        help='Path to config yaml file (default: configs/stream.yaml)')
+    parser.add_argument('--port', type=int, default=5000,
+                        help='Port to run the server on (default: 5000)')
+    args = parser.parse_args()
+    
+    # Set config path (this is module-level code, no need for global declaration)
+    model_config_path = args.config
+    
     print("Starting Flask server...")
+    print(f"Config file: {model_config_path}")
     print("Note: Model will be loaded on first generation request")
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=args.port, debug=False, threaded=True)
 

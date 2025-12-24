@@ -1,0 +1,31 @@
+exp_name: stream_tiny # Experiment names
+seed: 1234 # Seed value
+
+test_ckpt: "${dirs.outputs}/20251219_01492_ldf_tiny_stream/step_step=200000.ckpt"
+test_vae_ckpt: "${dirs.outputs}/vae_1d_z4_step=300000.ckpt"
+test_vae:
+    target: models.vae_wan_1d.VAEWanModel
+    ema_decay: 0.99
+    params:
+        input_dim: 263
+        z_dim: 4
+model:
+    target: models.diffusion_forcing_wan_tiny.DiffForcingWanModel
+    ema_decay: 0.99
+    params:
+        model_name: "google/umt5-base"
+        input_dim: 4
+        noise_steps: 10
+        hidden_dim: 256
+        ffn_dim: 1024
+        freq_dim: 64
+        num_heads: 8
+        num_layers: 8
+        time_embedding_scale: 1.0
+        chunk_size: 5
+        use_text_cond: True
+        text_len: 128
+        drop_out: 0.1
+        cfg_scale: 5.0
+        prediction_type: "vel"
+        causal: False

@@ -3,7 +3,7 @@
 ## Quick Start
 
 ```bash
-cd /web_demo
+cd web_demo
 ./server.sh start
 ```
 

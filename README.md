@@ -1,3 +1,5 @@
+# The project is now hosted at [https://github.com/AlayaLab/FloodDiffusion](https://github.com/AlayaLab/FloodDiffusion)
+
 # FloodDiffusion: Tailored Diffusion Forcing for Streaming Motion Generation
 
 [[Project Page]](https://shandaai.github.io/FloodDiffusion/) | [[Paper (arXiv)]](https://arxiv.org/abs/2512.03520)
